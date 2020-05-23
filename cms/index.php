@@ -1,4 +1,4 @@
-<?php include 'inc/header.php';?>
+<?php include 'inc/header.php'; ?>
 
         <!-- page content -->
         <div class="right_col" role="main">
@@ -53,4 +53,4 @@
           </div>
         </div>
         <!-- /page content -->
-<?php include 'inc/footer.php';?>        
+  <?php include 'inc/footer.php'; ?>
