@@ -1,1 +1,2 @@
 May 23, 2020 11:31:56 pm : (run Query database) : SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'admin@magazine.com' for key 'email'
+May 24, 2020 04:04:34 pm : (run Query database) : SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'admin@magazine.com' for key 'email'
