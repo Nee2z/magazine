@@ -1,72 +1,44 @@
 <?php 
- $header = "Change Password"; 
-include 'inc/header.php'; ?>
-<?php include 'inc/checklogin.php'; ?>
+    include $_SERVER['DOCUMENT_ROOT'].'config/init.php';
+    include '../inc/checklogin.php';
 
-        <!-- page content -->
-        <div class="right_col" role="main">
-          <div class="">
-            <?php flashMessage(); ?>
-            <div class="page-title">
-              <div class="title_left">
-                <h3>Change Password</h3>
-              </div>
-            </div>
+    if ($_POST) {
+      if (isset($_POST['oldpassword']) && !empty($_POST['oldpassword'])) {
+        if (isset($_POST['password']) && !empty($_POST['password']) && isset($_POST['newpassword']) && !empty($_POST['newpassword'])) {
+          if ($_POST['password'] == $_POST['newpassword']) {
+            $user = new user();
+            $user_info = $user->getUserbyEmail($_SESSION['user_email']);
+            if ($user_info) {
+              $password = sha1($_SESSION['user_email'].$_POST['oldpassword']);
+              if ($password==$user_info[0]->password) {
+                $data = array(
+                  'password' => sha1($user_info[0]->email.$_POST['password'])
+                );
 
-            <div class="clearfix"></div>
+                $success=$user->updateUserByEmail($data,$user_info[0]->email);
+                if ($success) {
+                  redirect('../password-change','success','Password Change Successsfully');
+                }else{
+                  redirect('../password-change','error','Error while Changing password');
+                }
 
-            <div class="row">
-              <div class="col-md-12 col-sm-12 col-xs-12">
-                <div class="x_panel">
-                  <div class="x_title">
-                    <h2>Change your password here...</h2>
-                    <div class="clearfix"></div>
-                  </div>
-                  <div class="x_content">
-                    <form action="process/password-change" method="post">
-                      <div class="form-group col-md-7">
-                        <label for="">Old Password</label>
-                        <input type="password" name="oldpassword" id="oldpassword" class="form-control" >
-                      </div>
-
-                      <div class="form-group col-md-7">
-                        <label for="">New Password</label>
-                        <input type="password" name="password" id="password" class="form-control" >
-                      </div>
-
-                      <div class="form-group col-md-7">
-                        <label for="">Retype New Password</label>
-                        <input type="password" name="newpassword" id="newpassword" class="form-control" >
-                      </div>
-                      <div class="form-group col-md-5">
-                        <span id="error" class="hidden"></span>
-                      </div>
-                      <div class="form-group col-md-7">
-                        <button class="btn btn-default" type="reset">Reset</button>
-                        <button class="btn btn-success" type="submit" id="submit">Submit</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- /page content -->
-  <?php include 'inc/footer.php'; ?>
-
-  <script>
-    $('#newpassword').keyup(function(){
-      var password = $('#password').val();
-      var newpassword = $('#newpassword').val();
-      if (password==newpassword) {
-        $('#error').addClass('hidden').removeClass('alert').removeClass('alert-danger').html('');
-        $('#submit').removeAttr('disabled','disabled');
+              }else{
+                redirect('../password-change','error','Old password is not correct');
+              }
+            }else{
+              redirect('../logout');
+            }
+          }else{
+            redirect('../password-change','error','New Password Doesnot Match');
+          }
+        }else{
+          redirect('../password-change','error','Both new Password field are required.');
+        }
       }else{
-        //password not equal
-        $('#error').removeClass('hidden').addClass('alert').addClass('alert-danger').html('Password Doesnot match');
-        $('#submit').attr('disabled','disabled');
+        redirect('../password-change','error','Old Password Required');
       }
-    });
+    }else{
+      redirect('../password-change','error','Unauthorized Access');
+    }
 
-  </script>
+ ?>

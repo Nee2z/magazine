@@ -1,71 +1,61 @@
 <?php 
-    include $_SERVER['DOCUMENT_ROOT'].'config/init.php';
-    include 'inc/checklogin.php';
+  include $_SERVER['DOCUMENT_ROOT'].'config/init.php';
+  debugger($_POST);
+  $data=array();
+  if ($_POST) {
+    if (isset($_POST['email']) && !empty($_POST['email'])) {
+      $data['email'] = filter_var($_POST['email'],FILTER_VALIDATE_EMAIL);
+      if ($data['email']) {
+        if (isset($_POST['password']) && !empty($_POST['password'])) {
+          $data['password'] =sha1($_POST['email'].$_POST['password']);
+          $user = new user();
+          $user_info = $user->getUserbyEmail($data['email']);
+          debugger($user_info);
+
+          if (isset($user_info[0]->email) && !empty($user_info[0]->email)) {
+            if ($user_info[0]->password==$data['password']) {
+              if ($user_info[0]->role=='Admin') {
+                if ($user_info[0]->status=='Active') {
+                  $_SESSION['user_id'] = $user_info[0]->id;
+                  $_SESSION['user_name'] = $user_info[0]->username;
+                  $_SESSION['user_email'] = $user_info[0]->email;
+                  $_SESSION['user_role'] = $user_info[0]->role;
+                  $_SESSION['user_status'] = $user_info[0]->status;
+                  $token = tokenize();
+                  $_SESSION['token'] = $token;
+
+                  $datas = array(
+                    'session_token' => $token
+                  );
+                  $user->updateUserByEmail($datas,$_SESSION['user_email']);
+                  if (isset($_POST['rememberme']) && !empty($_POST['rememberme'] && $_POST['rememberme']=='on')) {
+                    setcookie('_auth_user',$token,time()+(60*60*24*7),'/');
+                  }
+
+                  redirect('../index','success','Welcome to Dashboard');
+
+                }else{
+                  redirect('../login','error','Your accout is not active');
+                }
+              }else{
+                redirect('../login','error','You cannot logged in here.');
+              }
+            }else{
+              redirect('../login','error','Password donot Match');
+            }
+          }else{
+            redirect('../login','error','Email not Found. Please Register.');
+          }
+        }else{
+          redirect('../login','error','Password is required');
+        }
+      }else{
+        redirect('../login','error','Email type is not correct');
+      }
+    }else{
+      redirect('../login','error','Email is required.');
+    }
+  }else{
+    redirect('../login','error','Unauthorized Access..');
+  }
  ?>
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!-- Meta, title, CSS, favicons, etc. -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Magazine | Login</title>
-
-   <!-- Bootstrap -->
-    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="assets/css/font-awesome.min.css" rel="stylesheet">
-    <!-- NProgress -->
-    <link href="assets/nprogress/nprogress.css" rel="stylesheet">
-
-    <!-- Custom Theme Style -->
-    <link href="assets/css/custom.min.css" rel="stylesheet">
-    <!-- Animate.css -->
-    <link href="assets/css/animate.min.css" rel="stylesheet">
-    <script src="assets/js/jquery.min.js"></script>
-
-  </head>
-
-  <body class="login">
-    <div>
-      <a class="hiddenanchor" id="signup"></a>
-      <a class="hiddenanchor" id="signin"></a>
-
-      <div class="login_wrapper">
-        <div class="animate form login_form">
-          <section class="login_content">
-            <?php flashMessage(); ?>
-            <form action="process/login" method="post">
-              <h1>Login Form</h1>
-              <div>
-                <input type="text" class="form-control" placeholder="Email" required="" name="email" />
-              </div>
-              <div>
-                <input type="password" class="form-control" placeholder="Password" required="" name="password" />
-              </div>
-              <div>
-                <input type="checkbox" name="rememberme" />Remember Me
-              </div>
-              <div>
-                <button class="btn btn-default submit" type="submit">Log in</button>
-              </div>
-
-              <div class="clearfix"></div>
-
-              <div class="separator">
-                <div class="clearfix"></div>
-                <br />
-
-                <div>
-                  <p>&copy; <?php echo Date("Y"); ?> All Rights Reserved. Privacy and Terms</p>
-                </div>
-              </div>
-            </form>
-          </section>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>

@@ -1,49 +1,83 @@
 <?php 
-	include $_SERVER['DOCUMENT_ROOT'].'config/init.php';
-	$schema = new schema();
-	$table = array(
-			'users' => "
-				CREATE TABLE IF NOT EXISTS users
-					(
-						id int not null AUTO_INCREMENT PRIMARY KEY,
-						username varchar(50),
-						email varchar(150) UNIQUE KEY,
-						password varchar(200),
-						session_token text,
-						activate_token text,
-						password_reset_token text,
-						role enum('Admin','Staff') default 'Staff',
-						status enum('Active','Passive') default 'Passive',
-						added_by int,
-						created_date datetime default current_timestamp,
-						updated_date datetime on update current_timestamp
-					)
-			",
-			'superuser' => "
-				INSERT into users SET 
-					username = 'Admin',
-					email = 'admin@magazine.com',
-					password = '".sha1('admin@magazine.comadmin123')."',
-					role = 'Admin',
-					status = 'Active'	
-			"
-		);
-
-	foreach ($table as $key => $sql) {
-		try{
-			$success = $schema->create($sql);
-			// echo $sql;
-			if ($success) {
-				echo "Query ".$key." Executed Successfully<br>";
-			}else{
-				echo "Problem While Executing Query :".$key."<br>";
-			}
-		}catch(PDOException $e){
-			error_log(Date("M d, Y h:i:s a").' : (run Query) : '.$e->getMessage()."\r\n",3,ERROR_PATH.'error.log');
-			return false;
-
+	function debugger($data,$is_die=false){
+		echo "<pre>";
+		print_r($data);
+		echo "</pre>";
+		if ($is_die) {
+			exit();
 		}
 	}
 
+	function sanitize($str){
+		return trim(stripcslashes(strip_tags($str)));
+	}
 
+	function tokenize($length=100){
+		$char = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQESTUVWXYZ0123456789';
+		$len = strlen($char);
+		$token='';
+		for ($i=0; $i < $length; $i++) { 
+			$token.=$char[rand(0,$len-1)];
+		}
+		return $token;
+	}
+
+	function redirect($loc,$key="",$message=""){
+		$_SESSION[$key]=$message;
+		@header('location: '.$loc);
+		exit();
+	}
+
+	function flashMessage(){
+		if (isset($_SESSION['error']) && !empty($_SESSION['error'])) {
+			echo "<span class='alert alert-danger'>".$_SESSION['error']."</span>";
+			unset($_SESSION['error']);
+		}else if (isset($_SESSION['success']) && !empty($_SESSION['success'])) {
+			echo "<span class='alert alert-success'>".$_SESSION['success']."</span>";
+			unset($_SESSION['success']);
+		}else if (isset($_SESSION['warning']) && !empty($_SESSION['warning'])) {
+			echo "<span class='alert alert-warning'>".$_SESSION['warning']."</span>";
+			unset($_SESSION['warning']);
+		}
+?>
+		<script type="text/javascript">
+			setTimeout(function(){
+				$('.alert').slideUp('slow');
+			},3000);
+		</script>
+<?php
+		
+      }
+
+	  function uploadImage($data,$loc='image'){
+		  if ($data) {
+			  if (!$data['error']) {
+				  if ($data['size']<5000000) {
+					  $ext = pathinfo($data['name'],PATHINFO_EXTENSION);
+					  if (in_array(strtolower($ext),ALLOWED_EXTENSION)) {
+						  $destination = UPLOAD_PATH.strtolower($loc).'/';
+						  if (!is_dir($destination)) {
+							  mkdir($destination,0777,true);
+						  }
+						  $filename = ucfirst(strtolower($loc)).'-'.date('Ymdhisa').rand(0,999).'.'.$ext;
+						  $success = move_uploaded_file($data['tmp_name'], $destination.$filename);
+						  if ($success) {
+							  return $filename;
+						  }else{
+							  return false;
+						  }
+					  }else{
+						  return false;
+					  }
+				  }else{
+					  return false;
+				  }
+			  }else{
+				  return false;
+			  }
+		  }else{
+			  return false;
+		  }
+	  }
+	
  ?>
